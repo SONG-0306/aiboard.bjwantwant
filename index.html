@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>米果质量数据看板 · 北京总厂</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333;font-size:14px;-webkit-text-size-adjust:100%;}
+.header{background:linear-gradient(135deg,#1a73e8,#0d47a1);color:#fff;padding:14px 18px;}
+.hrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.header h1{font-size:18px;}
+.header .sub{font-size:11px;opacity:.83;margin-top:2px;}
+.header .meta{display:flex;gap:12px;margin-top:4px;flex-wrap:wrap;}
+.header .meta span{font-size:11px;opacity:.82;}
+.hbtns{display:flex;gap:8px;align-items:center;}
+.hbtn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:11px;padding:4px 12px;border-radius:14px;cursor:pointer;white-space:nowrap;}
+.hbtn:hover{background:rgba(255,255,255,.3);}
+.container{max-width:1400px;margin:0 auto;padding:10px;}
+
+.banner{display:none;padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:10px;}
+.banner.show{display:block;}
+.banner.err{background:#fff5f5;color:#c53030;border-left:3px solid #e53e3e;}
+.banner.warn{background:#fffaf0;color:#c05621;border-left:3px solid #dd6b20;}
+.banner.ok{background:#f0fff4;color:#276749;border-left:3px solid #38a169;}
+
+.prod-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
+.prod-tab{padding:6px 14px;border-radius:16px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:.2s;color:#555;}
+.prod-tab.active{background:#1a73e8;color:#fff;border-color:#1a73e8;}
+
+.abar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px;}
+.acrd{border-radius:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.acrd.dan{background:#fff5f5;border-left:4px solid #e53e3e;}
+.acrd.war{background:#fffaf0;border-left:4px solid #dd6b20;}
+.acrd.ok{background:#f0fff4;border-left:4px solid #38a169;}
+.acrd.inf{background:#ebf8ff;border-left:4px solid #3182ce;}
+.acrd .num{font-size:22px;font-weight:700;}
+.acrd.dan .num{color:#e53e3e;}
+.acrd.war .num{color:#dd6b20;}
+.acrd.ok .num{color:#38a169;}
+.acrd.inf .num{color:#2b6cb0;}
+.acrd .lb{font-size:12px;color:#555;margin-top:2px;}
+.acrd .sub{font-size:10px;color:#999;margin-top:1px;}
+
+.pnl{background:#fff;border-radius:8px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;}
+.pnl h3{font-size:13px;font-weight:600;margin-bottom:8px;color:#444;}
+.pnl h3 .bdg{float:right;font-size:10px;font-weight:400;padding:1px 8px;border-radius:8px;}
+.bdg-r{background:#fee;color:#c53030;}
+.bdg-o{background:#fef;color:#c05621;}
+.bdg-g{background:#efe;color:#276749;}
+
+.st{font-size:14px;font-weight:600;margin:12px 0 8px;padding-left:8px;border-left:3px solid #1a73e8;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:680px){.grid2{grid-template-columns:1fr;}}
+
+.tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.tbl th{background:#f7f8fa;padding:5px 6px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #e0e0e0;font-size:10px;}
+.tbl td{padding:4px 6px;border-bottom:1px solid #f0f0f0;}
+
+.tag{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:500;}
+.tag-d{background:#fee;color:#c53030;}
+.tag-w{background:#fefcbf;color:#975a16;}
+.tag-g{background:#e8f5e9;color:#2e7d32;}
+.tred{color:#e53e3e;font-weight:600;}
+
+.chart-box{margin:6px 0;}
+.hbar{margin:2px 0;display:flex;align-items:center;gap:6px;font-size:11px;}
+.hbar .lb{width:80px;flex-shrink:0;text-align:right;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hbar .bar-wrap{flex:1;height:18px;background:#f0f0f0;border-radius:4px;position:relative;overflow:hidden;}
+.hbar .bar-fill{height:100%;border-radius:4px;transition:width .3s;min-width:2px;}
+.hbar .val{width:44px;flex-shrink:0;font-weight:600;font-size:11px;}
+
+.vbars{display:flex;justify-content:space-around;align-items:flex-end;height:160px;padding:4px 0;}
+.vgroup{display:flex;gap:3px;align-items:flex-end;justify-content:center;}
+.vbar{width:24px;border-radius:3px 3px 0 0;position:relative;min-height:2px;}
+.vbar .vval{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;white-space:nowrap;}
+
+.pie-wrap{display:flex;align-items:center;gap:12px;}
+.pie{width:120px;height:120px;border-radius:50%;flex-shrink:0;}
+.pie-leg{font-size:11px;flex:1;}
+.pie-leg-item{display:flex;align-items:center;gap:5px;margin:3px 0;}
+.pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+.line-chart{width:100%;height:130px;}
+.line-chart svg{width:100%;height:100%;}
+
+.cloud{font-size:12px;padding:8px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;justify-content:center;line-height:1.4;}
+.cloud span{display:inline-block;padding:2px 6px;border-radius:4px;}
+
+.ai-btn-wrap{text-align:center;margin:8px 0 4px;}
+.ai-btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:8px 26px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:.3s;box-shadow:0 3px 10px rgba(102,126,234,.33);}
+.ai-btn:hover{transform:translateY(-1px);box-shadow:0 5px 15px rgba(102,126,234,.45);}
+.ai-btn:active{transform:translateY(0);}
+.ai-btn.loading{opacity:.7;pointer-events:none;}
+.ai-result{display:none;margin-top:8px;padding:14px;background:linear-gradient(135deg,#faf5ff,#ede9fe);border-radius:10px;border-left:4px solid #7c3aed;font-size:12px;line-height:1.75;color:#374151;}
+.ai-result.show{display:block;}
+.ai-result h4{font-size:13px;color:#5b21b6;margin:8px 0 4px;}
+.ai-result ul{padding-left:16px;margin:4px 0;}
+.ai-result li{margin:2px 0;}
+
+@media(max-width:480px){
+  .hbar .lb{width:60px;font-size:10px;}
+  .hbar .val{width:36px;font-size:10px;}
+  .pie{width:100px;height:100px;}
+  .vbars{height:120px;}
+  .vbar{width:18px;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hrow">
+    <div>
+      <h1>米果质量数据看板 · 北京总厂</h1>
+      <div class="sub" id="dataSource">数据版本：本地缓存</div>
+    </div>
+    <div class="hbtns">
+      <button class="hbtn" onclick="refreshFromWorker()">🔄 加载云端数据</button>
+    </div>
+  </div>
+  <div class="meta">
+    <span>雪饼 · 厚烧海苔 · 小小酥 · 大米饼</span>
+    <span id="updateTime"></span>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="banner" id="banner"></div>
+
+<div class="prod-tabs" id="ptabs"></div>
+
+<div class="abar" id="alertBar"></div>
+
+<h2 class="st">生产过程问题追踪</h2>
+<div class="grid2">
+  <div class="pnl"><h3>待处理问题 · 按线别分布</h3><div id="chartOpenIssuesByLine" class="chart-box"></div></div>
+  <div class="pnl"><h3>问题类型分布</h3><div id="chartIssueTypes" class="chart-box"></div></div>
+</div>
+<div class="pnl">
+  <h3>最新未结案问题 <span class="bdg bdg-r">需关注</span></h3>
+  <table class="tbl"><thead><tr><th>问题点类型</th><th>不符合项说明</th><th>线别</th><th>原因分析</th><th>纠正措施</th><th>状态</th></tr></thead><tbody id="issueTable"></tbody></table>
+</div>
+
+<h2 class="st">制程参数 · 线别对比</h2>
+<div class="grid2">
+  <div class="pnl"><h3>各线别半成品 vs 成品水分(%)</h3><div id="chartMoistureCompare" class="chart-box"></div></div>
+  <div class="pnl"><h3>各线别油附率(%)</h3><div id="chartOilRateCompare" class="chart-box"></div></div>
+</div>
+<div class="grid2">
+  <div class="pnl"><h3>巡检时段·水分波动</h3><div id="chartMoistureTrend" class="chart-box line-chart"></div></div>
+  <div class="pnl"><h3>巡检时段·油附率波动</h3><div id="chartOilTrend" class="chart-box line-chart"></div></div>
+</div>
+
+<h2 class="st">微生物检测 · 异常告警</h2>
+<div class="ai-btn-wrap">
+  <button class="ai-btn" id="aiBtn" onclick="showAnalysis()">🤖 AI 分析微生物风险</button>
+</div>
+<div class="ai-result" id="aiResult"></div>
+
+<div class="grid2">
+  <div class="pnl"><h3>菌落超标最高值排名（标准涂抹≤100）</h3><div id="chartMicrobeCompare" class="chart-box"></div></div>
+  <div class="pnl"><h3>大肠检出点位（不得检出）</h3><div id="chartEColiCompare" class="chart-box"></div></div>
+</div>
+<div class="grid2">
+  <div class="pnl"><h3>雪饼线 · 菌落高风险点位</h3><div id="chartXBacDetail" class="chart-box"></div></div>
+  <div class="pnl"><h3>厚烧海苔线 · 菌落高风险点位</h3><div id="chartHSBacDetail" class="chart-box"></div></div>
+</div>
+<div class="grid2">
+  <div class="pnl"><h3>小小酥线 · 菌落高风险点位</h3><div id="chartXXSBacDetail" class="chart-box"></div></div>
+  <div class="pnl"><h3>大米饼线 · 菌落检测情况</h3><div id="chartDMBacDetail" class="chart-box"></div></div>
+</div>
+<div class="pnl">
+  <h3>超标检测记录</h3>
+  <table class="tbl"><thead><tr><th>日期</th><th>产品线</th><th>检测点位</th><th>菌落(≤100)</th><th>大肠(不得检出)</th><th>判定</th></tr></thead><tbody id="microbeTable"></tbody></table>
+</div>
+
+<h2 class="st">稽核问题闭环追踪</h2>
+<div class="grid2">
+  <div class="pnl"><h3>问题分类分布</h3><div id="chartAuditCategories" class="chart-box"></div></div>
+  <div class="pnl"><h3>完成状态</h3><div id="chartAuditStatus" class="chart-box"></div></div>
+</div>
+<div class="grid2">
+  <div class="pnl">
+    <h3>AI分析·高频问题词云</h3>
+    <div class="cloud" id="wordCloud">
+      <span style="font-size:20px;color:#e53e3e;font-weight:700;">设备管理</span>
+      <span style="font-size:17px;color:#dd6b20;font-weight:600;">胶点位置</span>
+      <span style="font-size:15px;color:#3182ce;">标识管理</span>
+      <span style="font-size:19px;color:#e53e3e;font-weight:600;">鼠虫害</span>
+      <span style="font-size:17px;color:#dd6b20;font-weight:600;">包装密封性</span>
+      <span style="font-size:14px;color:#38a169;">化学品</span>
+      <span style="font-size:13px;color:#718096;">计量器具</span>
+      <span style="font-size:15px;color:#805ad5;">封箱效果</span>
+      <span style="font-size:12px;color:#a0aec0;">温度记录</span>
+      <span style="font-size:15px;color:#e53e3e;">异物管控</span>
+    </div>
+    <div style="font-size:10px;color:#999;margin-top:3px;text-align:center;">字号越大=出现频率越高</div>
+  </div>
+  <div class="pnl">
+    <h3>待完成稽核问题</h3>
+    <table class="tbl"><thead><tr><th>问题描述</th><th>分类</th><th>优先级</th><th>状态</th></tr></thead><tbody id="auditTable"></tbody></table>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ====== Worker 配置 ======
+var WORKER_URL = 'https://qa-data-api.2943764386.workers.dev';
+
+// ====== 硬编码数据（作为离线兜底） ======
+var DATA = {
+  "all":{
+    alert:{danger:{n:"6",lb:"高风险点位",sub:"菌落/大肠反复超标"},warning:{n:"9700",lb:"菌落最高值(≤100)",sub:"雪饼·明胶桶"},ok:{n:"633",lb:"总检测记录",sub:"2026年9月~10月"}},
+    issues:{
+      types:[["设备管理",35],["计量管理",18],["化学品管理",12],["鼠虫害管理",10],["卫生管理",8],["异物管控",7],["其他",10]],
+      openLines:[["雪饼2线",4],["仙贝1线",3],["小小酥线",2],["厚烧线",1],["大米饼线",0]],
+      recent:[["设备管理","全箱产品胶点位置不正","雪饼2线","胶枪定位偏移","校准胶枪位置","进行中"],["计量管理","压力表缺合格标签","雪饼2线","巡检遗漏","补齐标签并培训","进行中"],["鼠虫害管理","灭蝇灯下方插座有塑料盖","仙贝1线","清洁后未复原","移除并加强检查","待处理"],["化学品管理","前段喷壶无标识","小小酥线","标识脱落","补充标识","待处理"],["设备管理","后段D线装箱机胶点大","厚烧线","胶嘴磨损","更换胶嘴","待处理"]]
+    },
+    mois:{labels:["雪饼2线","仙贝1线","小小酥线","厚烧线","大米饼线"],semi:[1.692,1.254,1.548,1.845,2.663],final:[0.894,0.806,0.886,1.454,1.836]},
+    oil:{labels:["雪饼2线","仙贝1线","小小酥线","厚烧线","大米饼线"],vals:[26,23,109,165,153]},
+    moisTr:{lb:["早第1次","早第2次","夜第1次","夜第2次"],v:[1.685,1.526,1.631,1.496]},
+    oilTr:{lb:["早第1次","早第2次","夜第1次","夜第2次"],v:[25,78,124,136]},
+    microbeItems:["明胶桶(雪饼)","打糖锅内壁(雪饼)","回收糖PU带(雪饼)","浸酱桶(原味小小酥)","浸酱桶(厚烧海苔)","回收糖过滤网(雪饼)","回收糖刮板(雪饼)","打糖搅拌桨轴心(雪饼)","煮胶下料口(雪饼)","转筐(厚烧海苔)","煮酱锅内壁(厚烧)"],
+    microbeCounts:[9700,8500,4900,3380,1180,2170,858,838,828,768,138],
+    eColiVals:[28,998,278,198,0,88,0,98,42,0,0],
+    micRec:[
+      ["2026-09-01","雪饼","明胶桶",9680,27,"超标"],
+      ["2026-09-02","雪饼","明胶桶",4180,15,"超标"],
+      ["2026-09-07","雪饼","明胶桶",3780,20,"超标"],
+      ["2026-09-03","雪饼","打糖锅内壁",3160,556,"超标"],
+      ["2026-09-08","雪饼","打糖锅内壁",1430,292,"超标"],
+      ["2026-09-013","雪饼","打糖锅内壁",1170,477,"超标"],
+      ["2026-09-04","雪饼","回收糖PU带",2380,166,"超标"],
+      ["2026-09-01","雪饼","回收糖PU带",3460,221,"超标"],
+      ["2026-09-11","雪饼","煮胶下料口",826,41,"超标"],
+      ["2026-09-10","雪饼","回收糖过滤网",896,51,"超标"],
+      ["2026-09-15","厚烧海苔","浸酱桶内壁",1070,0,"超标"],
+      ["2026-09-06","原味小小酥","浸酱桶内壁",2830,163,"超标"],
+      ["2026-09-10","原味小小酥","浸酱桶内壁",1880,130,"超标"]
+    ],
+    auditCat:[["设备管理",56],["计量管理",27],["化学品管理",21],["鼠虫害管理",37],["异物管控",24],["其他",43]],
+    auditSt:[["已完成",142],["进行中",34],["待处理",32]],
+    audPen:[["全箱产品胶点位置不正","设备管理","一般-紧急","进行中"],["压力表缺合格标签","计量管理","一般-紧急","进行中"],["灭蝇灯下方插座有塑料盖","鼠虫害管理","一般-紧急","待处理"],["前段喷壶无标识","化学品管理","一般-紧急","待处理"]]
+  },
+  "雪饼":{
+    alert:{danger:{n:"4",lb:"高风险点位",sub:"明胶桶·打糖锅·回收糖系统"},warning:{n:"9700",lb:"菌落最高值",sub:"明胶桶"},ok:{n:"250",lb:"涂抹记录",sub:"含大量超标"}},
+    issues:{types:[["设备管理",33],["计量管理",26],["鼠虫害管理",11],["其他",101]],openLines:[["雪饼2线",2]],recent:[["设备管理","全箱产品胶点位置不正","雪饼2线","胶枪定位偏移","校准胶枪位置","进行中"],["计量管理","压力表缺合格标签","雪饼2线","巡检遗漏","补齐标签并培训","进行中"]]},
+    mois:{labels:["雪饼2线"],semi:[1.688],final:[0.891]},oil:{labels:["雪饼2线"],vals:[29]},
+    moisTr:{lb:["早1","早2","夜1","夜2"],v:[1.977,1.753,1.789,1.563]},oilTr:{lb:["早1","早2","夜1","夜2"],v:[93,110,113,106]},
+    microbeItems:["明胶桶","打糖锅内壁","回收糖PU带","回收糖过滤网","打糖搅拌桨轴心","回收糖刮板","煮胶下料口","回收糖槽"],
+    microbeCounts:[9680,8480,4870,2160,837,856,827,716],eColiVals:[28,997,277,86,97,0,41,0],
+    micRec:[["2026-09-01","雪饼","明胶桶",9660,27,"超标"],["2026-09-02","雪饼","明胶桶",4280,15,"超标"],["2026-09-03","雪饼","打糖锅内壁",5650,708,"超标"],["2026-09-04","雪饼","回收糖PU带",3080,201,"超标"],["2026-09-06","雪饼","回收糖PU带",1770,110,"超标"],["2026-09-07","雪饼","明胶桶",3830,22,"超标"],["2026-09-10","雪饼","打糖锅内壁",1540,312,"超标"],["2026-09-12","雪饼","打糖搅拌桨轴心",630,94,"超标"],["2026-09-14","雪饼","明胶桶",2490,11,"超标"]],
+    auditCat:[["设备管理",74],["计量管理",27],["其他",43]],auditSt:[["已完成",102],["进行中",18],["待处理",128]],audPen:[["全箱产品胶点位置不正","设备管理","一般-紧急","进行中"],["压力表缺合格标签","计量管理","一般-紧急","进行中"]]
+  },
+  "仙贝":{
+    alert:{danger:{n:"0",lb:"无相关数据",sub:"仙贝线无微生物检测"},warning:{n:"—",lb:"—",sub:"—"},ok:{n:"—",lb:"—",sub:"—"}},
+    issues:{types:[["设备管理",35],["鼠虫害管理",21],["其他",28]],openLines:[["仙贝1线",1]],recent:[["鼠虫害管理","灭蝇灯下方插座有塑料盖","仙贝1线","清洁后未复原","移除并加强检查","待处理"]]},
+    mois:{labels:["仙贝1线"],semi:[1.253],final:[0.765]},oil:{labels:["仙贝1线"],vals:[22]},
+    moisTr:{lb:["早1","早2"],v:[1.245,1.128]},oilTr:{lb:["早1","早2"],v:[21,136]},
+    microbeItems:[],microbeCounts:[],eColiVals:[],
+    micRec:[["2026-09-03","仙贝","糖液储罐",61,420,"超标"]],
+    auditCat:[["设备管理",57],["鼠虫害管理",15],["其他",64]],auditSt:[["已完成",92],["进行中",14],["待处理",114]],audPen:[["灭蝇灯下方插座有塑料盖","鼠虫害管理","一般-紧急","待处理"]]
+  },
+  "厚烧海苔":{
+    alert:{danger:{n:"2",lb:"高风险点位",sub:"浸酱桶·转筐"},warning:{n:"1180",lb:"菌落最高值(≤100)",sub:"浸酱桶内壁"},ok:{n:"无大肠",lb:"大肠均为0",sub:"厚烧海苔涂抹点"}},
+    issues:{types:[["设备管理",46],["化学品管理",27],["其他",38]],openLines:[["厚烧线",1]],recent:[["设备管理","后段D线装箱机胶点大","厚烧线","胶嘴磨损","更换胶嘴","待处理"]]},
+    mois:{labels:["厚烧线"],semi:[1.841],final:[1.464]},oil:{labels:["厚烧线"],vals:[163]},
+    moisTr:{lb:["早1","早2"],v:[1.887,1.914]},oilTr:{lb:["早1","早2"],v:[141,182]},
+    microbeItems:["浸酱桶内壁","转筐","煮酱锅内壁"],microbeCounts:[1178,766,137],eColiVals:[0,0,0],
+    micRec:[["2026-09-05","厚烧海苔","浸酱桶内壁",1120,0,"超标"],["2026-09-06","厚烧海苔","转筐",760,0,"超标"],["2026-09-08","厚烧海苔","浸酱桶内壁",620,0,"超标"],["2026-09-15","厚烧海苔","浸酱桶内壁",870,0,"超标"]],
+    auditCat:[["设备管理",56],["化学品管理",27],["其他",38]],auditSt:[["已完成",89],["进行中",16],["待处理",116]],audPen:[["后段D线装箱机胶点大","设备管理","一般-紧急","待处理"]]
+  },
+  "小小酥":{
+    alert:{danger:{n:"1",lb:"高风险点位",sub:"浸酱桶(原味)"},warning:{n:"3380",lb:"菌落最高值(≤100)",sub:"浸酱桶内壁"},ok:{n:"198",lb:"大肠检出",sub:"需重点关注"}},
+    issues:{types:[["设备管理",45],["化学品管理",24],["其他",39]],openLines:[["小小酥线",1]],recent:[["化学品管理","前段喷壶无标识","小小酥线","标识脱落","补充标识","待处理"]]},
+    mois:{labels:["小小酥线"],semi:[1.551],final:[0.883]},oil:{labels:["小小酥线"],vals:[111]},
+    moisTr:{lb:["早1","早2"],v:[1.597,1.543]},oilTr:{lb:["早1","早2"],v:[129,186]},
+    microbeItems:["浸酱桶(原味)","浸酱桶(葱香)"],microbeCounts:[3378,58],eColiVals:[197,6],
+    micRec:[["2026-09-06","原味小小酥","浸酱桶内壁",2960,173,"超标"],["2026-09-08","原味小小酥","浸酱桶内壁",2570,139,"超标"],["2026-09-10","原味小小酥","浸酱桶内壁",1850,128,"超标"]],
+    auditCat:[["设备管理",62],["化学品管理",20],["其他",46]],auditSt:[["已完成",84],["进行中",17],["待处理",117]],audPen:[["前段喷壶无标识","化学品管理","一般-紧急","待处理"]]
+  },
+  "大米饼":{
+    alert:{danger:{n:"0",lb:"无超标",sub:"所有点位均达标"},warning:{n:"74",lb:"菌落最高值(≤100)",sub:"转筐"},ok:{n:"121",lb:"检测记录",sub:"整体良好"}},
+    issues:{types:[["设备管理",51],["其他",41]],openLines:[["大米饼线",0]],recent:[]},
+    mois:{labels:["大米饼线"],semi:[2.662],final:[1.832]},oil:{labels:["大米饼线"],vals:[152]},
+    moisTr:{lb:["早1","早2"],v:[2.635,2.518]},oilTr:{lb:["早1","早2"],v:[133,197]},
+    microbeItems:["转筐","煮酱锅内壁","浸酱桶内壁","干燥机出口输送网","酱附后输送网"],microbeCounts:[72,18,8,8,1],eColiVals:[0,0,0,0,0],
+    micRec:[["2026-09-06","大米饼","转筐",70,0,"合格"],["2026-09-10","大米饼","煮酱锅内壁",16,0,"合格"]],
+    auditCat:[["设备管理",58],["其他",42]],auditSt:[["已完成",90],["进行中",11],["待处理",119]],audPen:[]
+  }
+};
+
+var curP = "all";
+var PRODS = ["全部品项","雪饼","仙贝","厚烧海苔","小小酥","大米饼"];
+var PROD_KEYS = ["all","雪饼","仙贝","厚烧海苔","小小酥","大米饼"];
+
+function init() {
+  var phtml = "";
+  for(var i=0;i<PRODS.length;i++){
+    phtml += '<div class="prod-tab'+(i===0?' active':'')+'" onclick="switchProd(\''+PROD_KEYS[i]+'\')">'+PRODS[i]+'</div>';
+  }
+  document.getElementById("ptabs").innerHTML = phtml;
+  renderAll(DATA.all);
+
+  // 页面加载后自动尝试从 Worker 获取数据
+  refreshFromWorker();
+}
+
+function showBanner(msg, type) {
+  var b = document.getElementById("banner");
+  b.textContent = msg;
+  b.className = "banner show " + type;
+  setTimeout(function(){ b.classList.remove("show"); }, 8000);
+}
+
+function refreshFromWorker() {
+  var btn = document.querySelector('.hbtn');
+  if(btn) btn.textContent = "⏳ 加载中...";
+
+  fetch(WORKER_URL + '/api/data')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res.data && !res.data.empty) {
+        // 用云端数据替换硬编码数据
+        DATA = res.data;
+        renderAll(DATA[curP]);
+        document.getElementById("dataSource").textContent = "数据版本：云端实时 (" + (res.updated_at || "未知时间") + ")";
+        showBanner("✅ 已成功加载云端数据！", "ok");
+      } else {
+        showBanner("⚠️ 云端暂无数据，可找大圆说「刷新数据」推送", "warn");
+      }
+    })
+    .catch(function(){
+      showBanner("⚠️ 无法连接云端，当前展示的是本地缓存数据", "warn");
+    })
+    .finally(function(){
+      if(btn) btn.textContent = "🔄 加载云端数据";
+    });
+}
+
+function switchProd(k){
+  curP = k;
+  var tabs = document.querySelectorAll(".prod-tab");
+  for(var i=0;i<tabs.length;i++){tabs[i].classList.remove("active");}
+  var idx = PROD_KEYS.indexOf(k);
+  if(idx>=0)tabs[idx].classList.add("active");
+  renderAll(DATA[k]);
+}
+
+function renderAll(d){
+  if(!d) { d = DATA.all; curP = "all"; }
+  renderAlerts(d);
+  renderIssues(d);
+  renderCharts(d);
+  renderTables(d);
+  document.getElementById("aiResult").classList.remove("show");
+}
+
+function renderAlerts(d){
+  var a=d.alert;
+  document.getElementById("alertBar").innerHTML =
+    '<div class="acrd dan"><div class="num">'+a.danger.n+'</div><div class="lb">'+a.danger.lb+'</div><div class="sub">'+a.danger.sub+'</div></div>'+
+    '<div class="acrd war"><div class="num">'+a.warning.n+'</div><div class="lb">'+a.warning.lb+'</div><div class="sub">'+a.warning.sub+'</div></div>'+
+    '<div class="acrd ok"><div class="num">'+a.ok.n+'</div><div class="lb">'+a.ok.lb+'</div><div class="sub">'+a.ok.sub+'</div></div>';
+}
+
+function renderIssues(d){
+  var h="";
+  var rec=d.issues.recent;
+  for(var i=0;i<rec.length;i++){
+    var r=rec[i];
+    var sc=r[5]==="待处理"?"tag-d":"tag-w";
+    h+='<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td><td><span class="tag '+sc+'">'+r[5]+'</span></td></tr>';
+  }
+  if(h==="")h='<tr><td colspan="6" style="text-align:center;color:#999;padding:10px;">暂无未结案问题</td></tr>';
+  document.getElementById("issueTable").innerHTML=h;
+}
+
+function maxVal(arr){var m=0;for(var i=0;i<arr.length;i++){if(arr[i][1]>m)m=arr[i][1];}return m||1;}
+
+function renderHBars(id,data,colors,maxOverride){
+  var mx = maxOverride || maxVal(data);
+  var cols=colors||['#4299e1'];
+  var h='';
+  for(var i=0;i<data.length;i++){
+    var pct=(mx>0?(data[i][1]/mx*100):0);
+    var c=cols[i%cols.length];
+    h+='<div class="hbar"><span class="lb">'+data[i][0]+'</span><div class="bar-wrap"><div class="bar-fill" style="width:'+pct+'%;background:'+c+';"></div></div><span class="val">'+data[i][1]+'</span></div>';
+  }
+  document.getElementById(id).innerHTML=h;
+}
+
+function renderVBars(id,groups,mx){
+  var h='<div class="vbars">';
+  for(var i=0;i<groups.length;i++){
+    var g=groups[i];
+    h+='<div class="vgroup">';
+    for(var j=0;j<g.vals.length;j++){
+      var ht=mx>0?(g.vals[j]/mx*130):0;
+      if(ht<2)ht=2;
+      h+='<div class="vbar" style="height:'+ht+'px;background:'+g.colors[j]+';"><span class="vval">'+g.vals[j]+'</span></div>';
+    }
+    h+='</div>';
+  }
+  h+='</div>';
+  h+='<div style="display:flex;justify-content:space-around;font-size:10px;color:#666;margin-top:18px;">';
+  for(var i=0;i<groups.length;i++){
+    h+='<span style="text-align:center;flex:1;">'+groups[i].name+'</span>';
+  }
+  h+='</div>';
+  document.getElementById(id).innerHTML=h;
+}
+
+function renderPie(id,data){
+  var total=0;for(var i=0;i<data.length;i++)total+=data[i][1];
+  if(total===0)total=1;
+  var colors=['#e53e3e','#dd6b20','#d69e2e','#38a169','#3182ce','#805ad5','#718096'];
+  var conic=data.map(function(d,i){var pct=Math.max(d[1]/total*360, 0.5);return colors[i%colors.length]+' '+pct+'deg';}).join(', ');
+  var h='<div class="pie-wrap"><div class="pie" style="background:conic-gradient('+conic+');"></div><div class="pie-leg">';
+  for(var i=0;i<data.length;i++){
+    var pct=(data[i][1]/total*100).toFixed(1);
+    h+='<div class="pie-leg-item"><span class="pie-dot" style="background:'+colors[i%colors.length]+';"></span><span>'+data[i][0]+' ('+pct+'%)</span></div>';
+  }
+  h+='</div></div>';
+  document.getElementById(id).innerHTML=h;
+}
+
+function renderLine(id,labels,values,color){
+  var mx=0;for(var i=0;i<values.length;i++){if(values[i]>mx)mx=values[i];}
+  if(mx===0)mx=1;
+  var w=400,h=120;
+  var padL=30,padR=10,padT=10,padB=52;
+  var cw=w-padL-padR,ch=h-padT-padB;
+  var pts=[];
+  for(var i=0;i<values.length&&i<labels.length;i++){
+    var x=padL+(i/(Math.max(values.length-1,1)))*cw;
+    var y=padT+ch-(values[i]/mx)*ch;
+    pts.push(x.toFixed(1)+','+y.toFixed(1));
+  }
+  var poly=pts.join(' ');
+  var svgHtml='<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="width:100%;height:100%;">';
+  for(var gi=0;gi<=4;gi++){
+    var gy=padT+(gi/4)*ch;
+    var val=mx*(1-gi/4);
+    svgHtml+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(w-padR)+'" y2="'+gy.toFixed(1)+'" stroke="#eee" stroke-width="1"/>';
+    svgHtml+='<text x="'+(padL-3)+'" y="'+(gy.toFixed(1)+3)+'" text-anchor="end" font-size="8" fill="#999">'+val.toFixed(0)+'</text>';
+  }
+  svgHtml+='<polyline points="'+poly+'" fill="none" stroke="'+color+'" stroke-width="2"/>';
+  var ptArr=poly.split(' ');
+  for(var j=0;j<ptArr.length;j++){
+    var xy=ptArr[j].split(',');
+    svgHtml+='<circle cx="'+xy[0]+'" cy="'+xy[1]+'" r="3" fill="'+color+'"/>';
+  }
+  for(var k=0;k<labels.length;k++){
+    var x=padL+(k/(Math.max(labels.length-1,1)))*cw;
+    svgHtml+='<text x="'+x.toFixed(1)+'" y="'+(h-4)+'" text-anchor="middle" font-size="8" fill="#666">'+labels[k]+'</text>';
+  }
+  svgHtml+='</svg>';
+  document.getElementById(id).innerHTML=svgHtml;
+}
+
+function renderCharts(d){
+  var iss=d.issues;
+  renderHBars("chartOpenIssuesByLine",iss.openLines,['#e53e3e']);
+  renderPie("chartIssueTypes",iss.types);
+  var moisGroups=[];
+  for(var i=0;i<d.mois.labels.length;i++){
+    moisGroups.push({name:d.mois.labels[i], vals:[d.mois.semi[i],d.mois.final[i]], colors:['#4299e1','#48bb78']});
+  }
+  var mmx=0;
+  for(var i=0;i<d.mois.semi.length;i++){if(d.mois.semi[i]>mmx)mmx=d.mois.semi[i];}
+  for(var i=0;i<d.mois.final.length;i++){if(d.mois.final[i]>mmx)mmx=d.mois.final[i];}
+  renderVBars("chartMoistureCompare",moisGroups,mmx*1.2);
+  var oilData=[];
+  for(var i=0;i<d.oil.labels.length;i++){oilData.push([d.oil.labels[i],d.oil.vals[i]]);}
+  renderHBars("chartOilRateCompare",oilData,['#ed8936']);
+  renderLine("chartMoistureTrend",d.moisTr.lb,d.moisTr.v,'#4299e1');
+  renderLine("chartOilTrend",d.oilTr.lb,d.oilTr.v,'#ed8936');
+
+  var mcData=[];
+  for(var i=0;i<d.microbeItems.length;i++){mcData.push([d.microbeItems[i],d.microbeCounts[i]]);}
+  renderHBars("chartMicrobeCompare",mcData,['#fc8181'],10000);
+
+  var ecData=[];
+  for(var i=0;i<d.microbeItems.length;i++){ecData.push([d.microbeItems[i],d.eColiVals[i]]);}
+  renderHBars("chartEColiCompare",ecData,['#f6ad55'],1000);
+
+  var xbD=[],hsD=[],xxsD=[],dmD=[];
+  for(var i=0;i<d.microbeItems.length;i++){
+    var item=d.microbeItems[i];
+    var count=d.microbeCounts[i];
+    if(item.indexOf("雪饼")>=0||item.indexOf("打糖")>=0||item.indexOf("明胶")>=0||item.indexOf("回收糖")>=0||item.indexOf("煮胶")>=0||item.indexOf("搅拌桨")>=0)xbD.push([item.replace("(雪饼)",""),count]);
+    if(item.indexOf("厚烧")>=0||item.indexOf("转筐")>=0||item.indexOf("煮酱锅内壁(厚烧)")>=0)hsD.push([item.replace("(厚烧)",""),count]);
+    if(item.indexOf("小小酥")>=0)xxsD.push([item,count]);
+    if(item.indexOf("大米饼")>=0)dmD.push([item,count]);
+  }
+  if(xbD.length===0)xbD=[["暂无超标数据",1]];
+  if(hsD.length===0)hsD=[["暂无超标数据",1]];
+  if(xxsD.length===0)xxsD=[["暂无超标数据",1]];
+  if(dmD.length===0)dmD=[["均符合标准",1]];
+
+  renderHBars("chartXBacDetail",xbD,['#fc8181'],10000);
+  renderHBars("chartHSBacDetail",hsD,['#fc8181'],1200);
+  renderHBars("chartXXSBacDetail",xxsD,['#fc8181'],3400);
+  renderHBars("chartDMBacDetail",dmD,['#68d391'],100);
+
+  renderPie("chartAuditCategories",d.auditCat);
+  renderPie("chartAuditStatus",d.auditSt);
+}
+
+function renderTables(d){
+  var mh="";
+  for(var i=0;i<d.micRec.length;i++){
+    var mr=d.micRec[i];
+    var rc=mr[5]==="超标"?"tag-d":"tag-g";
+    mh+='<tr><td>'+mr[0]+'</td><td>'+mr[1]+'</td><td>'+mr[2]+'</td><td class="'+(parseInt(mr[3])>100?'tred':'')+'">'+mr[3]+'</td><td class="'+(parseInt(mr[4])>0?'tred':'')+'">'+mr[4]+'</td><td><span class="tag '+rc+'">'+mr[5]+'</span></td></tr>';
+  }
+  if(!mh)mh='<tr><td colspan="6" style="text-align:center;color:#999;padding:10px;">暂无数据</td></tr>';
+  document.getElementById("microbeTable").innerHTML=mh;
+
+  var ah="";
+  for(var i=0;i<d.audPen.length;i++){
+    var ar=d.audPen[i];
+    var sc=ar[3]==="待处理"?"tag-d":"tag-w";
+    ah+='<tr><td>'+ar[0]+'</td><td>'+ar[1]+'</td><td><span class="tag tag-w">'+ar[2]+'</span></td><td><span class="tag '+sc+'">'+ar[3]+'</span></td></tr>';
+  }
+  if(!ah)ah='<tr><td colspan="4" style="text-align:center;color:#999;padding:10px;">全部已完成</td></tr>';
+  document.getElementById("auditTable").innerHTML=ah;
+}
+
+function showAnalysis() {
+  var btn = document.getElementById("aiBtn");
+  btn.classList.add("loading");
+  btn.textContent = "⏳ AI 分析中...";
+  var d = DATA[curP];
+  setTimeout(function(){
+    var html = "<h4>🔍 微生物风险分析 — "+(curP==="all"?"全部品项":curP)+"</h4>";
+    if(curP==="all" || curP==="雪饼"){
+      html += "<h4>⚠ 雪饼线 — 最严重</h4><ul>";
+      html += "<li><strong>明胶桶</strong>：菌落高达9700（超标97倍！），大肠最高28，属最紧急风险点</li>";
+      html += "<li><strong>打糖锅内壁</strong>：菌落最大8500，大肠最高达1000，大肠污染最严重</li>";
+      html += "<li><strong>回收糖PU带</strong>：菌落最大4900，大肠最高280，双重污染</li>";
+      html += "<li><strong>回收糖过滤网/刮板/槽</strong>：菌落反复超标，糖分残留滋生微生物</li>";
+      html += "<li><strong>打糖搅拌桨轴心</strong>：结构复杂存在清洁死角，大肠屡次检出</li></ul>";
+    }
+    if(curP==="all" || curP==="厚烧海苔"){
+      html += "<h4>🟠 厚烧海苔线 — 需关注</h4><ul>";
+      html += "<li><strong>浸酱桶内壁</strong>：菌落最大1200，虽无大肠但菌落持续超标</li>";
+      html += "<li><strong>转筐</strong>：菌落最大770，可能存在结构藏匿残渣问题</li></ul>";
+    }
+    if(curP==="all" || curP==="小小酥"){
+      html += "<h4>🟠 小小酥线 — 需关注</h4><ul>";
+      html += "<li><strong>原味小小酥·浸酱桶内壁</strong>：菌落最大3400，大肠最高200，与厚烧海苔同类问题</li></ul>";
+    }
+    if(curP==="all" || curP==="大米饼"){
+      html += "<h4>🟢 大米饼线 — 良好</h4><ul>";
+      html += "<li>所有点位均在标准以内（最高菌落75≤100），整体卫生状况较好</li></ul>";
+    }
+    html += "<h4>🎯 重点关注建议</h4><ul>";
+    html += "<li><strong>P0级（立即整改）</strong>：明胶桶、打糖锅内壁、回收糖PU带——每日清洗+每周深度拆洗</li>";
+    html += "<li><strong>P1级（加强监控）</strong>：浸酱桶内壁（原味小小酥/厚烧海苔）、转筐——排查酱料管路积垢</li>";
+    html += "<li><strong>P2级（定期关注）</strong>：回收糖系统（过滤网/刮板/槽）、打糖搅拌桨轴心</li></ul>";
+    html += "<h4>💡 预防建议</h4><ul>";
+    html += "<li>回收糖系统每班次结束后立即冲洗，避免糖分干结</li>";
+    html += "<li>打糖搅拌桨轴心改为可拆卸式或增加CIP在线清洗频次</li>";
+    html += "<li>建立微生物超标点位台账，每次超标记录原因分析和整改措施</li>";
+    html += "<li>增加生产中涂抹频次（不仅生产前），及时发现交叉污染</li>";
+    html += "<li>对反复超标的点位考虑更换清洁剂类型或调整浓度</li></ul>";
+    var resultDiv = document.getElementById("aiResult");
+    resultDiv.innerHTML = html;
+    resultDiv.classList.add("show");
+    btn.classList.remove("loading");
+    btn.textContent = "🤖 AI 分析微生物风险";
+    resultDiv.scrollIntoView({behavior:"smooth", block:"start"});
+  }, 300);
+}
+
+init();
+</script>
+</body>
+</html>
