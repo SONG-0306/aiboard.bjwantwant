@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>米果质量数据综合看板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Microsoft YaHei',sans-serif;background:#f0f2f5;color:#333;font-size:14px;-webkit-text-size-adjust:100%;}
+.header{background:linear-gradient(135deg,#1a73e8,#0d47a1);color:#fff;padding:14px 18px;}
+.hrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.header h1{font-size:18px;}
+.header .sub{font-size:11px;opacity:.8;margin-top:3px;}
+.header .meta{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;}
+.header .meta span{font-size:11px;opacity:.85;}
+.hbtns{display:flex;gap:8px;align-items:center;}
+.hbtn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);color:#fff;font-size:12px;padding:5px 12px;border-radius:14px;cursor:pointer;}
+.hbtn:hover{background:rgba(255,255,255,.3);}
+.container{max-width:1400px;margin:0 auto;padding:10px;}
+
+.banner{display:none;padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:10px;}
+.banner.show{display:block;}
+.banner.err{background:#fff5f5;color:#c53030;border-left:3px solid #e53e3e;}
+.banner.warn{background:#fffaf0;color:#c05621;border-left:3px solid #dd6b20;}
+
+.prod-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
+.prod-tab{padding:6px 14px;border-radius:16px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:.2s;color:#555;}
+.prod-tab.active{background:#1a73e8;color:#fff;border-color:#1a73e8;}
+
+.abar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px;}
+.acrd{border-radius:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.acrd.dan{background:#fff5f5;border-left:4px solid #e53e3e;}
+.acrd.war{background:#fffaf0;border-left:4px solid #dd6b20;}
+.acrd.ok{background:#f0fff4;border-left:4px solid #38a169;}
+.acrd.inf{background:#ebf8ff;border-left:4px solid #3182ce;}
+.acrd .num{font-size:22px;font-weight:700;}
+.acrd.dan .num{color:#e53e3e;}
+.acrd.war .num{color:#dd6b20;}
+.acrd.ok .num{color:#38a169;}
+.acrd.inf .num{color:#2b6cb0;}
+.acrd .lb{font-size:12px;color:#555;margin-top:2px;}
+.acrd .sub{font-size:10px;color:#999;margin-top:1px;}
+
+.pnl{background:#fff;border-radius:8px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;}
+.pnl h3{font-size:13px;font-weight:600;margin-bottom:8px;color:#444;}
+.pnl h3 .bdg{float:right;font-size:10px;font-weight:400;padding:1px 8px;border-radius:8px;}
+.bdg-r{background:#fee;color:#c53030;}
+.bdg-g{background:#efe;color:#276749;}
+
+.st{font-size:14px;font-weight:600;margin:12px 0 8px;padding-left:8px;border-left:3px solid #1a73e8;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:680px){.grid2{grid-template-columns:1fr;}}
+
+.tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.tbl th{background:#f7f8fa;padding:5px 6px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #e0e0e0;font-size:10px;white-space:nowrap;}
+.tbl td{padding:4px 6px;border-bottom:1px solid #f0f0f0;vertical-align:top;}
+.scroll{overflow-x:auto;max-height:420px;overflow-y:auto;}
+
+.tag{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:500;white-space:nowrap;}
+.tag-d{background:#fee;color:#c53030;}
+.tag-w{background:#fefcbf;color:#975a16;}
+.tag-g{background:#e8f5e9;color:#2e7d32;}
+.tag-i{background:#ebf8ff;color:#2b6cb0;}
+.tred{color:#e53e3e;font-weight:600;}
+.tgray{color:#999;}
+
+.chart-box{margin:6px 0;}
+.hbar{margin:2px 0;display:flex;align-items:center;gap:6px;font-size:11px;}
+.hbar .lb{width:104px;flex-shrink:0;text-align:right;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hbar .bar-wrap{flex:1;height:18px;background:#f0f0f0;border-radius:4px;position:relative;overflow:hidden;}
+.hbar .bar-fill{height:100%;border-radius:4px;transition:width .3s;min-width:2px;}
+.hbar .val{width:56px;flex-shrink:0;font-weight:600;font-size:11px;}
+
+.vbars{display:flex;justify-content:space-around;align-items:flex-end;height:160px;padding:4px 0;}
+.vgroup{display:flex;gap:3px;align-items:flex-end;justify-content:center;}
+.vbar{width:18px;border-radius:3px 3px 0 0;position:relative;min-height:2px;}
+.vbar .vval{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;white-space:nowrap;}
+
+.pie-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.pie{width:130px;height:130px;border-radius:50%;flex-shrink:0;}
+.pie-leg{font-size:11px;flex:1;min-width:150px;}
+.pie-leg-item{display:flex;align-items:center;gap:5px;margin:3px 0;}
+.pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+.empty{text-align:center;color:#999;padding:10px;font-size:11px;}
+.sec{display:none;}
+.sec.on{display:block;}
+.foot{font-size:10px;color:#999;padding:6px 2px 20px;line-height:1.7;}
+@media(max-width:480px){
+  .hbar .lb{width:74px;font-size:10px;}
+  .hbar .val{width:44px;font-size:10px;}
+  .pie{width:100px;height:100px;}
+  .vbars{height:120px;}
+  .vbar{width:14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hrow">
+    <div>
+      <h1>米果质量数据综合看板</h1>
+      <div class="sub">数据源：企业微信智能表格 · 近 90 天窗口 · 自动只读同步</div>
+      <div class="meta">
+        <span id="mUpdated">更新：--</span>
+        <span id="mRows">--</span>
+        <span id="mSync">同步：--</span>
+      </div>
+    </div>
+    <div class="hbtns">
+      <button class="hbtn" id="btnRefresh" onclick="loadAll()">刷新</button>
+      <button class="hbtn" id="btnAuth" onclick="onAuthClick()">登录</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="banner" id="banner"></div>
+
+  <div class="prod-tabs" id="ptabs"></div>
+
+  <div class="abar" id="alertBar"></div>
+
+  <!-- ============ 稽核闭环 ============ -->
+  <div class="sec" data-domain="audit">
+  <h2 class="st">稽核问题闭环追踪 · 北京总厂体系</h2>
+  <div class="grid2">
+    <div class="pnl"><h3>各厂未结案问题数 <span class="bdg bdg-r" id="bdgOpenIssues">--</span></h3><div id="chartOpenIssuesByPlant" class="chart-box"></div></div>
+    <div class="pnl"><h3>问题分类分布</h3><div id="chartIssueCategory" class="chart-box"></div></div>
+  </div>
+  <div class="grid2">
+    <div class="pnl"><h3>各厂闭环率</h3><div id="chartIssueCloseRate" class="chart-box"></div></div>
+    <div class="pnl"><h3>各厂问题量 / 重复发生</h3><div id="chartIssueRepeat" class="chart-box"></div></div>
+  </div>
+  <div class="pnl">
+    <h3>各厂稽核问题闭环台账</h3>
+    <div class="scroll">
+      <table class="tbl"><thead><tr><th>厂别</th><th>问题总数</th><th>已闭环</th><th>未结案</th><th>重复发生</th><th>闭环率</th></tr></thead><tbody id="issueStatTable"></tbody></table>
+    </div>
+  </div>
+  <div class="pnl">
+    <h3>未结案问题明细 <span class="bdg bdg-r">需关注</span></h3>
+    <div class="scroll">
+      <table class="tbl"><thead><tr><th>厂别</th><th>问题点描述</th><th>分类</th><th>优先级</th><th>负责人</th><th>截止日期</th><th>纠正措施</th></tr></thead><tbody id="issueTable"></tbody></table>
+    </div>
+  </div>
+  </div>
+
+  <!-- ============ 零化点检 ============ -->
+  <div class="sec" data-domain="zero">
+  <h2 class="st">零化专案点检 · 异物与虫害</h2>
+  <div class="grid2">
+    <div class="pnl"><h3>按检查部门分布</h3><div id="chartZeroDept" class="chart-box"></div></div>
+    <div class="pnl"><h3>按问题性质归类</h3><div id="chartZeroCategory" class="chart-box"></div></div>
+  </div>
+  <div class="pnl">
+    <h3>点检问题明细 <span class="bdg bdg-r" id="bdgZero">--</span></h3>
+    <div class="scroll">
+      <table class="tbl"><thead><tr><th>检查日期</th><th>部门</th><th>问题点</th><th>风险分析</th><th>负责人</th><th>截止日期</th><th>整改措施</th></tr></thead><tbody id="zeroTable"></tbody></table>
+    </div>
+  </div>
+  </div>
+
+  <!-- ============ 微生物 ============ -->
+  <div class="sec" data-domain="microbe">
+  <h2 class="st">微生物检测 · 超标告警</h2>
+  <div class="grid2">
+    <div class="pnl"><h3>超标点位排名（按超标次数）</h3><div id="chartMicrobeOver" class="chart-box"></div></div>
+    <div class="pnl"><h3>超标点位品项分布</h3><div id="chartMicrobeItem" class="chart-box"></div></div>
+  </div>
+  <div class="pnl">
+    <h3>超标点位跟进清单 <span class="bdg bdg-r" id="bdgMicrobe">--</span></h3>
+    <div class="scroll">
+      <table class="tbl"><thead><tr><th>品项</th><th>检测点位</th><th>类别</th><th>检测次数</th><th>超标次数</th><th>最近检测</th><th>最近菌落</th><th>负责人</th><th>截止日期</th></tr></thead><tbody id="microbeSummaryTable"></tbody></table>
+    </div>
+  </div>
+  <div class="pnl">
+    <h3>超标检测记录</h3>
+    <div class="scroll">
+      <table class="tbl"><thead><tr><th>检测日期</th><th>品项</th><th>检测点位</th><th>类别</th><th>菌落</th><th>大肠菌群</th><th>备注</th></tr></thead><tbody id="microbeTable"></tbody></table>
+    </div>
+  </div>
+  </div>
+
+  <!-- ============ 制程参数 ============ -->
+  <div class="sec" data-domain="process">
+  <h2 class="st">制程参数 · 线别对比</h2>
+  <div class="grid2">
+    <div class="pnl"><h3>各线别半成品 vs 成品水分(%)</h3><div id="chartMoistureCompare" class="chart-box"></div></div>
+    <div class="pnl"><h3>各线别油附率(%)</h3><div id="chartOilRateCompare" class="chart-box"></div></div>
+  </div>
+  <div class="grid2">
+    <div class="pnl"><h3>各线别糖率 / 酱率(%)</h3><div id="chartSugarSauce" class="chart-box"></div></div>
+    <div class="pnl"><h3>各线别调味率(%)</h3><div id="chartFlavor" class="chart-box"></div></div>
+  </div>
+  <div class="pnl">
+    <h3>线别制程参数台账 <span class="bdg bdg-g" id="bdgProcess">--</span></h3>
+    <div class="scroll">
+      <table class="tbl"><thead><tr><th>线别</th><th>记录数</th><th>半成品水分</th><th>油附率</th><th>糖率</th><th>酱率</th><th>调味率</th><th>成品水分</th><th>最近记录日</th><th>负责人</th><th>截止日期</th></tr></thead><tbody id="processTable"></tbody></table>
+    </div>
+  </div>
+  </div>
+
+  <!-- ============ 不良品 ============ -->
+  <div class="sec" data-domain="defect">
+  <h2 class="st">不良品数据 · 全国厂区</h2>
+  <div class="grid2">
+    <div class="pnl"><h3>缺陷类型分布（记录数）</h3><div id="chartDefectType" class="chart-box"></div></div>
+    <div class="pnl"><h3>缺陷类型平均不良率(%)</h3><div id="chartDefectRate" class="chart-box"></div></div>
+  </div>
+  <div class="grid2">
+    <div class="pnl"><h3>产线分布（记录数）</h3><div id="chartDefectLine" class="chart-box"></div></div>
+    <div class="pnl"><h3>厂区分布（记录数）</h3><div id="chartDefectPlant" class="chart-box"></div></div>
+  </div>
+  <div class="pnl">
+    <h3>缺陷类型汇总台账 <span class="bdg bdg-g" id="bdgDefect">--</span></h3>
+    <div class="scroll">
+      <table class="tbl"><thead><tr><th>缺陷类型</th><th>记录数</th><th>平均不良率</th><th>最高不良率</th></tr></thead><tbody id="defectTable"></tbody></table>
+    </div>
+  </div>
+  </div>
+
+  <!-- ============ 数据同步 ============ -->
+  <div class="sec" data-domain="sync">
+  <h2 class="st">数据同步状态</h2>
+  <div class="pnl">
+    <h3>企业微信智能表格 · 入库记录</h3>
+    <div class="scroll">
+      <table class="tbl"><thead><tr><th>数据源</th><th>源文档</th><th>子表</th><th>入库行数</th><th>窗口</th><th>状态</th><th>说明</th><th>同步时间</th></tr></thead><tbody id="syncTable"></tbody></table>
+    </div>
+  </div>
+  </div>
+
+  <div class="foot" id="footNote"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<script>
+/* 前端的公开配置来自云服务激活结果，仅含公开字段。 */
+var PUBLIC_CONFIG = {
+  endpoint: "https://miguo-quality.app.workbuddy.host",
+  oauthRelayBaseUrl: "https://www.workbuddy.cn/v2/as/genie-baas/oauth",
+  publishableKey: "wbpk_GCM33gM0IjgYxq4jvQqyij_rAP6gDdEq3nSUVNiGjCsrv31kPsu9Rky"
+};
+
+var cloud = null;
+var SESSION = null;
+var CAN_EDIT = false;
+var curTab = "all";
+var REFRESH_MS = 20000;
+var DB = { issueStat: [], issues: [], defectSum: [], processSum: [], microbeSum: [], microbe: [], zero: [], sync: [] };
+
+var TABS = [
+  { k: "all", label: "总览" },
+  { k: "audit", label: "稽核闭环" },
+  { k: "zero", label: "零化点检" },
+  { k: "microbe", label: "微生物" },
+  { k: "process", label: "制程参数" },
+  { k: "defect", label: "不良品" },
+  { k: "sync", label: "数据同步" }
+];
+
+function esc(s) {
+  if (s === null || s === undefined) return "";
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function dash(v) { return (v === null || v === undefined || v === "") ? '<span class="tgray">待确认</span>' : esc(v); }
+function fx(v, d) {
+  if (v === null || v === undefined || v === "") return "--";
+  var x = Number(v);
+  if (!isFinite(x)) return esc(v);
+  return x.toFixed(d === undefined ? 2 : d);
+}
+function fmtTime(ts) {
+  if (!ts) return "--";
+  var d = new Date(ts);
+  if (isNaN(d.getTime())) return String(ts).slice(0, 16).replace("T", " ");
+  var p = function (n) { return (n < 10 ? "0" : "") + n; };
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+function showBanner(msg, kind) {
+  var b = document.getElementById("banner");
+  if (!msg) { b.className = "banner"; b.textContent = ""; return; }
+  b.className = "banner show " + (kind || "err");
+  b.textContent = msg;
+}
+function cnt(arr, keyFn, filterFn) {
+  var m = {};
+  arr.forEach(function (r) {
+    if (filterFn && !filterFn(r)) return;
+    var k = keyFn(r);
+    if (k === null || k === undefined || k === "") k = "未标注";
+    m[k] = (m[k] || 0) + 1;
+  });
+  return Object.keys(m).map(function (k) { return [k, m[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+}
+function maxVal(arr) { var m = 0; arr.forEach(function (d) { if (d[1] > m) m = d[1]; }); return m || 1; }
+
+function renderHBars(id, data, colors, maxOverride, unit) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!data.length) { el.innerHTML = '<div class="empty">暂无数据</div>'; return; }
+  var mx = maxOverride || maxVal(data);
+  var cols = colors || ["#4299e1"];
+  var h = "";
+  data.forEach(function (d, i) {
+    var pct = mx > 0 ? (d[1] / mx * 100) : 0;
+    h += '<div class="hbar"><span class="lb" title="' + esc(d[0]) + '">' + esc(d[0]) + '</span><div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%;background:' + cols[i % cols.length] + ';"></div></div><span class="val">' + esc(String(d[1])) + (unit || "") + '</span></div>';
+  });
+  el.innerHTML = h;
+}
+
+function renderVBars(id, groups, mx) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!groups.length) { el.innerHTML = '<div class="empty">暂无数据</div>'; return; }
+  var h = '<div class="vbars">';
+  groups.forEach(function (g) {
+    h += '<div class="vgroup">';
+    g.vals.forEach(function (v, j) {
+      var ht = mx > 0 ? (v / mx * 130) : 0;
+      if (ht < 2) ht = 2;
+      h += '<div class="vbar" style="height:' + ht + 'px;background:' + g.colors[j] + ';" title="' + esc(g.tips ? g.tips[j] : "") + '"><span class="vval">' + esc(String(v)) + '</span></div>';
+    });
+    h += '</div>';
+  });
+  h += '</div><div style="display:flex;justify-content:space-around;font-size:10px;color:#666;margin-top:18px;">';
+  groups.forEach(function (g) { h += '<span style="text-align:center;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(g.name) + '</span>'; });
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function renderPie(id, data) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!data.length) { el.innerHTML = '<div class="empty">暂无数据</div>'; return; }
+  var total = 0; data.forEach(function (d) { total += d[1]; });
+  if (total === 0) total = 1;
+  var colors = ["#e53e3e", "#dd6b20", "#d69e2e", "#38a169", "#3182ce", "#805ad5", "#718096", "#2c7a7b", "#b7791f"];
+  var acc = 0;
+  var stops = data.map(function (d, i) {
+    var a0 = acc / total * 360;
+    acc += d[1];
+    var a1 = acc / total * 360;
+    return colors[i % colors.length] + " " + a0 + "deg " + a1 + "deg";
+  }).join(", ");
+  var h = '<div class="pie-wrap"><div class="pie" style="background:conic-gradient(' + stops + ');"></div><div class="pie-leg">';
+  data.forEach(function (d, i) {
+    var pct = (d[1] / total * 100).toFixed(1);
+    h += '<div class="pie-leg-item"><span class="pie-dot" style="background:' + colors[i % colors.length] + ';"></span><span>' + esc(d[0]) + ' (' + pct + '%)</span></div>';
+  });
+  h += "</div></div>";
+  el.innerHTML = h;
+}
+
+function renderTabs() {
+  var h = "";
+  TABS.forEach(function (t) {
+    h += '<div class="prod-tab' + (t.k === curTab ? " active" : "") + '" onclick="switchTab(\'' + t.k + '\')">' + t.label + "</div>";
+  });
+  document.getElementById("ptabs").innerHTML = h;
+}
+function switchTab(k) {
+  curTab = k;
+  renderTabs();
+  var secs = document.querySelectorAll(".sec");
+  for (var i = 0; i < secs.length; i++) {
+    var d = secs[i].getAttribute("data-domain");
+    secs[i].className = "sec" + ((k === "all" || k === d) ? " on" : "");
+  }
+}
+function sumBy(arr, f) { var s = 0; arr.forEach(function (r) { var v = Number(f(r)); if (isFinite(v)) s += v; }); return s; }
+
+/* ---------- 顶部指标 ---------- */
+function renderAlerts() {
+  var statTotal = sumBy(DB.issueStat, function (r) { return r.total_cnt; });
+  var statDone = sumBy(DB.issueStat, function (r) { return r.done_cnt; });
+  var statOpen = sumBy(DB.issueStat, function (r) { return r.open_cnt; });
+  var rate = statTotal ? (statDone / statTotal * 100).toFixed(1) : "--";
+  var maxCol = 0, maxAt = "";
+  DB.microbeSum.forEach(function (r) {
+    var c = Number(r.latest_colony);
+    if (isFinite(c) && c > maxCol) { maxCol = c; maxAt = r.item_place + "·" + r.test_point; }
+  });
+  var srcRows = sumBy(DB.sync, function (r) { return r.rows_loaded; });
+  var zdDept = cnt(DB.zero, function (r) { return r.dept; });
+
+  document.getElementById("alertBar").innerHTML =
+    '<div class="acrd dan"><div class="num">' + DB.issues.length + '</div><div class="lb">未结案稽核问题</div><div class="sub">覆盖 ' + cnt(DB.issues, function (r) { return r.plant; }).length + ' 个厂别</div></div>' +
+    '<div class="acrd ok"><div class="num">' + rate + '%</div><div class="lb">稽核问题闭环率</div><div class="sub">共 ' + statTotal + ' 项 / 已闭环 ' + statDone + ' 项</div></div>' +
+    '<div class="acrd war"><div class="num">' + DB.zero.length + '</div><div class="lb">零化点检问题</div><div class="sub">' + (zdDept[0] ? zdDept[0][0] + " " + zdDept[0][1] + " 项" : "--") + '</div></div>' +
+    '<div class="acrd dan"><div class="num">' + DB.microbeSum.length + '</div><div class="lb">微生物超标点位</div><div class="sub">最高菌落 ' + (maxCol || "--") + (maxAt ? " · " + maxAt : "") + '</div></div>' +
+    '<div class="acrd inf"><div class="num">' + srcRows.toLocaleString() + '</div><div class="lb">源表入库行数</div><div class="sub">近 ' + (DB.sync[0] && DB.sync[0].window_days ? DB.sync[0].window_days : 90) + ' 天窗口</div></div>';
+}
+
+/* ---------- 稽核闭环 ---------- */
+function renderAudit() {
+  var open = DB.issues;
+  document.getElementById("bdgOpenIssues").textContent = open.length + " 项";
+  renderHBars("chartOpenIssuesByPlant", cnt(open, function (r) { return r.plant; }), ["#e53e3e"]);
+  renderPie("chartIssueCategory", cnt(open, function (r) { return r.category; }));
+
+  var rateData = DB.issueStat.map(function (r) {
+    var t = Number(r.total_cnt) || 0, d = Number(r.done_cnt) || 0;
+    return [r.plant, t ? Math.round(d / t * 1000) / 10 : 0];
+  }).sort(function (a, b) { return b[1] - a[1]; });
+  renderHBars("chartIssueCloseRate", rateData, ["#38a169"], 100, "%");
+
+  var repData = DB.issueStat.map(function (r) { return [r.plant, Number(r.total_cnt) || 0]; }).sort(function (a, b) { return b[1] - a[1]; });
+  var repOverlay = DB.issueStat.map(function (r) { return [r.plant, Number(r.repeat_cnt) || 0]; });
+  renderHBars("chartIssueRepeat", repData, ["#4299e1"], null, "");
+
+  var h = "";
+  DB.issueStat.slice().sort(function (a, b) { return (b.total_cnt || 0) - (a.total_cnt || 0); }).forEach(function (r) {
+    var t = Number(r.total_cnt) || 0, d = Number(r.done_cnt) || 0;
+    var pct = t ? (d / t * 100).toFixed(1) : "0.0";
+    var cls = pct >= 80 ? "tag-g" : (pct >= 50 ? "tag-w" : "tag-d");
+    h += "<tr><td>" + esc(r.plant) + "</td><td>" + t + "</td><td>" + d + "</td><td>" +
+      (Number(r.open_cnt) ? '<span class="tred">' + r.open_cnt + "</span>" : "0") + "</td><td>" +
+      (Number(r.repeat_cnt) ? '<span class="tag tag-w">' + r.repeat_cnt + "</span>" : "0") +
+      '</td><td><span class="tag ' + cls + '">' + pct + "%</span></td></tr>";
+  });
+  if (!h) h = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+  document.getElementById("issueStatTable").innerHTML = h;
+
+  h = "";
+  open.forEach(function (r) {
+    h += "<tr><td>" + esc(r.plant) + "</td><td>" + esc(r.issue_desc) + "</td><td>" + dash(r.category) +
+      '</td><td><span class="tag tag-w">' + esc(r.priority || "一般") + "</span></td><td>" + dash(r.owner_name) +
+      "</td><td>" + dash(r.complete_date) + "</td><td>" + dash(r.action) + "</td></tr>";
+  });
+  if (!h) h = '<tr><td colspan="7" class="empty">暂无未结案问题</td></tr>';
+  document.getElementById("issueTable").innerHTML = h;
+}
+
+/* ---------- 零化点检 ---------- */
+function zeroCat(txt) {
+  var s = String(txt || "");
+  if (/毛发|线毛|脱丝|起毛|线头|线帽|丝线|掉毛/.test(s)) return "毛发线毛类异物";
+  if (/蚊|蝇|臭虫|虫/.test(s)) return "蚊虫类";
+  if (/破损|损坏|掉皮|磨损/.test(s)) return "工具设备破损";
+  if (/米团|残留|黑渣|炭渣|碳渣|脏饼|渣/.test(s)) return "残留与炭渣";
+  if (/螺丝|零配件|遗漏|收纳/.test(s)) return "零件遗漏与异物";
+  return "其他";
+}
+function renderZero() {
+  document.getElementById("bdgZero").textContent = DB.zero.length + " 项";
+  renderHBars("chartZeroDept", cnt(DB.zero, function (r) { return r.dept; }), ["#dd6b20"]);
+  renderPie("chartZeroCategory", cnt(DB.zero, function (r) { return zeroCat(r.item); }));
+  var h = "";
+  DB.zero.forEach(function (r) {
+    var c = zeroCat(r.item);
+    var cls = c === "其他" ? "tag-i" : "tag-w";
+    h += "<tr><td>" + esc(r.check_date) + "</td><td>" + esc(r.dept) + '</td><td><span class="tag ' + cls + '">' + esc(c) + "</span> " +
+      esc(r.item) + "</td><td>" + dash(r.risk) + "</td><td>" + dash(r.owner_name) + "</td><td>" + dash(null) + "</td><td>" + dash(r.action) + "</td></tr>";
+  });
+  if (!h) h = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+  document.getElementById("zeroTable").innerHTML = h;
+}
+
+/* ---------- 微生物 ---------- */
+function renderMicrobe() {
+  document.getElementById("bdgMicrobe").textContent = DB.microbeSum.length + " 个点位";
+  var top = DB.microbeSum.slice().sort(function (a, b) { return (Number(b.over_cnt) || 0) - (Number(a.over_cnt) || 0); }).slice(0, 14)
+    .map(function (r) { return [r.item_place + " · " + r.test_point, Number(r.over_cnt) || 0]; });
+  renderHBars("chartMicrobeOver", top, ["#e53e3e"], null, " 次");
+  renderPie("chartMicrobeItem", cnt(DB.microbeSum, function (r) { return r.item_place; }));
+
+  var h = "";
+  DB.microbeSum.slice().sort(function (a, b) { return (Number(b.over_cnt) || 0) - (Number(a.over_cnt) || 0); }).forEach(function (r) {
+    var over = Number(r.over_cnt) || 0, tot = Number(r.total_cnt) || 0;
+    var pct = tot ? (over / tot * 100) : 0;
+    h += "<tr><td>" + esc(r.item_place) + "</td><td>" + esc(r.test_point) + "</td><td>" + dash(r.category) + "</td><td>" + tot +
+      '</td><td class="tred">' + over + "</td><td>" + esc(r.latest_date) + "</td><td>" +
+      (Number(r.latest_colony) > 100 ? '<span class="tred">' + r.latest_colony + "</span>" : esc(r.latest_colony)) +
+      "</td><td>" + dash(null) + "</td><td>" + dash(null) + "</td></tr>";
+  });
+  if (!h) h = '<tr><td colspan="9" class="empty">暂无数据</td></tr>';
+  document.getElementById("microbeSummaryTable").innerHTML = h;
+
+  h = "";
+  DB.microbe.slice(0, 120).forEach(function (r) {
+    h += "<tr><td>" + esc(r.test_date) + "</td><td>" + esc(r.item_place) + "</td><td>" + esc(r.test_point) + "</td><td>" + dash(r.category) +
+      '</td><td class="tred">' + esc(r.colony) + '</td><td class="tred">' + esc(r.ecoli) + "</td><td>" + dash(r.note) + "</td></tr>";
+  });
+  if (!h) h = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+  document.getElementById("microbeTable").innerHTML = h;
+}
+
+/* ---------- 制程参数 ---------- */
+function renderProcess() {
+  var rows = DB.processSum.filter(function (r) { return r.scope === "category"; });
+  document.getElementById("bdgProcess").textContent = rows.length + " 条线别";
+  var mx = 0;
+  rows.forEach(function (r) {
+    [r.avg_semi, r.avg_final].forEach(function (v) { var x = Number(v); if (isFinite(x) && x > mx) mx = x; });
+  });
+  renderVBars("chartMoistureCompare", rows.map(function (r) {
+    var a = Number(r.avg_semi) || 0, b = Number(r.avg_final) || 0;
+    return { name: r.dim1, vals: [Math.round(a * 10) / 10, Math.round(b * 10) / 10], colors: ["#4299e1", "#48bb78"], tips: ["半成品水分", "成品水分"] };
+  }), mx * 1.25);
+  renderHBars("chartOilRateCompare", rows.map(function (r) { return [r.dim1, Math.round((Number(r.avg_oil) || 0) * 100) / 100]; }).sort(function (a, b) { return b[1] - a[1]; }), ["#ed8936"], null, "%");
+  renderHBars("chartSugarSauce", rows.map(function (r) { return [r.dim1, Math.round((Number(r.avg_sugar) || 0) * 100) / 100]; }).sort(function (a, b) { return b[1] - a[1]; }), ["#d69e2e"], null, "%");
+  renderHBars("chartFlavor", rows.map(function (r) { return [r.dim1, Math.round((Number(r.avg_flavor) || 0) * 100) / 100]; }).sort(function (a, b) { return b[1] - a[1]; }), ["#805ad5"], null, "%");
+
+  var h = "";
+  rows.slice().sort(function (a, b) { return (Number(b.cnt) || 0) - (Number(a.cnt) || 0); }).forEach(function (r) {
+    h += "<tr><td>" + esc(r.dim1) + "</td><td>" + (Number(r.cnt) || 0) + "</td><td>" + fx(r.avg_semi) + "</td><td>" + fx(r.avg_oil) +
+      "</td><td>" + fx(r.avg_sugar) + "</td><td>" + fx(r.avg_sauce) + "</td><td>" + fx(r.avg_flavor) + "</td><td>" + fx(r.avg_final) +
+      "</td><td>" + esc(r.latest_date) + "</td><td>" + dash(null) + "</td><td>" + dash(null) + "</td></tr>";
+  });
+  if (!h) h = '<tr><td colspan="11" class="empty">暂无数据</td></tr>';
+  document.getElementById("processTable").innerHTML = h;
+}
+
+/* ---------- 不良品 ---------- */
+function renderDefect() {
+  var dt = DB.defectSum.filter(function (r) { return r.scope === "defect_type"; });
+  var dl = DB.defectSum.filter(function (r) { return r.scope === "plant_line"; });
+  var dp = DB.defectSum.filter(function (r) { return r.scope === "plant"; });
+  document.getElementById("bdgDefect").textContent = dt.length + " 类缺陷";
+
+  renderHBars("chartDefectType", dt.map(function (r) { return [r.dim1, Number(r.cnt) || 0]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 14), ["#4299e1"]);
+  renderHBars("chartDefectRate", dt.map(function (r) { return [r.dim1, Math.round((Number(r.avg_rate) || 0) * 1000) / 1000]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 14), ["#e53e3e"], null, "%");
+
+  var lineAgg = {};
+  dl.forEach(function (r) {
+    var k = r.dim2 || "未标注";
+    lineAgg[k] = (lineAgg[k] || 0) + (Number(r.cnt) || 0);
+  });
+  renderHBars("chartDefectLine", Object.keys(lineAgg).map(function (k) { return [k, lineAgg[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 14), ["#38a169"]);
+
+  renderHBars("chartDefectPlant", dp.map(function (r) { return [r.dim1, Number(r.cnt) || 0]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 14), ["#805ad5"]);
+
+  var h = "";
+  dt.slice().sort(function (a, b) { return (Number(b.cnt) || 0) - (Number(a.cnt) || 0); }).forEach(function (r) {
+    h += "<tr><td>" + esc(r.dim1) + "</td><td>" + (Number(r.cnt) || 0) + "</td><td>" + fx(r.avg_rate, 3) + "%</td><td>" + fx(r.max_rate, 3) + "%</td></tr>";
+  });
+  if (!h) h = '<tr><td colspan="4" class="empty">暂无数据</td></tr>';
+  document.getElementById("defectTable").innerHTML = h;
+}
+
+/* ---------- 同步状态 ---------- */
+function renderSync() {
+  var h = "";
+  DB.sync.forEach(function (r) {
+    var cls = r.status === "ok" ? "tag-g" : "tag-w";
+    h += "<tr><td>" + esc(r.source_key) + "</td><td>" + esc(r.doc_name) + "</td><td>" + esc(r.sheet_title) + "</td><td>" +
+      (Number(r.rows_loaded) || 0).toLocaleString() + "</td><td>" + esc(r.window_days) + " 天</td><td><span class=\"tag " + cls + "\">" +
+      esc(r.status) + "</span></td><td>" + esc(r.detail) + "</td><td>" + fmtTime(r.last_synced_at) + "</td></tr>";
+  });
+  if (!h) h = '<tr><td colspan="8" class="empty">暂无同步记录</td></tr>';
+  document.getElementById("syncTable").innerHTML = h;
+
+  var latest = null;
+  DB.sync.forEach(function (r) { if (r.last_synced_at && (!latest || r.last_synced_at > latest)) latest = r.last_synced_at; });
+  var srcRows = sumBy(DB.sync, function (r) { return r.rows_loaded; });
+  document.getElementById("mUpdated").textContent = "更新：" + fmtTime(latest);
+  document.getElementById("mRows").textContent = "稽核 " + DB.issues.length + " · 零化 " + DB.zero.length +
+    " · 微生物超标 " + DB.microbeSum.length + " 点位 / " + DB.microbe.length + " 条 · 制程 " + DB.processSum.length + " · 不良品 " + DB.defectSum.length;
+  document.getElementById("mSync").textContent = "同步：" + (DB.sync.length ? DB.sync.length + " 张源表已入库，共 " + srcRows.toLocaleString() + " 行" : "未记录");
+}
+
+function renderAll() {
+  renderAlerts();
+  renderAudit();
+  renderZero();
+  renderMicrobe();
+  renderProcess();
+  renderDefect();
+  renderSync();
+}
+
+/* ---------- 登录（仅授予编辑标记，不做数据回写） ---------- */
+function renderAuthBtn() {
+  var b = document.getElementById("btnAuth");
+  if (!b) return;
+  if (SESSION && SESSION.user) {
+    b.textContent = (SESSION.user.name || "已登录") + " · 退出";
+    b.onclick = onSignOut;
+  } else {
+    b.textContent = "登录后可编辑";
+    b.onclick = onAuthClick;
+  }
+}
+async function onAuthClick() {
+  var back = new URL(location.href);
+  back.pathname = "/";
+  ["code", "state", "provider"].forEach(function (k) { back.searchParams.delete(k); });
+  var res = await cloud.auth.signInWithOAuth({ provider: "workbuddy", redirectTo: back.toString() });
+  if (res.error) { showBanner("登录失败：" + res.error.message + "（若提示未开启，请在管理端打开 WorkBuddy 登录开关）", "err"); return; }
+  location.assign(res.data.url);
+}
+async function onSignOut() {
+  await cloud.auth.signOut();
+  SESSION = null; CAN_EDIT = false;
+  renderAuthBtn(); renderAll();
+  showBanner("已退出登录，当前为只读模式。", "warn");
+}
+async function applySession(s) { SESSION = s || null; CAN_EDIT = !!(s && s.user); renderAuthBtn(); }
+async function restoreAuth() {
+  var url = new URL(location.href);
+  if (!url.searchParams.has("code") && !url.searchParams.has("error")) {
+    var cur = await cloud.auth.getSession();
+    await applySession(cur && cur.data ? cur.data : null);
+    return;
+  }
+  var provider = url.searchParams.get("provider");
+  if (provider !== "workbuddy" && provider !== "wechat") { showBanner("登录回调缺少有效方式，请重新登录。", "err"); return; }
+  var handler = provider === "workbuddy" ? cloud.auth.handleWorkBuddyCallback : cloud.auth.handleWechatWebCallback;
+  if (typeof handler !== "function") { showBanner("当前 SDK 暂不支持该登录方式。", "err"); return; }
+  var res = await handler.call(cloud.auth);
+  if (res.error) { showBanner("登录失败：" + res.error.message, "err"); return; }
+  if (res.data) {
+    ["code", "state", "provider"].forEach(function (k) { url.searchParams.delete(k); });
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
+    await applySession(res.data);
+  } else {
+    var cur2 = await cloud.auth.getSession();
+    await applySession(cur2 && cur2.data ? cur2.data : null);
+  }
+}
+
+/* ---------- 加载 ---------- */
+var TABLES = ["qc_issue_stat", "qc_issues", "qc_defect_summary", "qc_process_summary", "qc_microbe_summary", "qc_microbe", "qc_zerodefect", "qc_sync_log"];
+var KEYS = ["issueStat", "issues", "defectSum", "processSum", "microbeSum", "microbe", "zero", "sync"];
+
+async function loadAll() {
+  if (!cloud) return;
+  var btn = document.getElementById("btnRefresh");
+  if (btn) btn.textContent = "刷新中";
+  try {
+    var r = await Promise.all(TABLES.map(function (t) { return cloud.database.from(t).select("*"); }));
+    for (var i = 0; i < r.length; i++) {
+      if (r[i].error) showBanner("读取 " + TABLES[i] + " 失败：" + r[i].error.message, "err");
+      DB[KEYS[i]] = (r[i].data || []);
+    }
+    renderAll();
+    switchTab(curTab);
+    document.getElementById("footNote").innerHTML =
+      "数据来自企业微信智能表格（稽核问题一览表、不良品数据收集、微生物数据结果汇总表、重点制程参数收集表、零化专案点检表）近 90 天窗口。" +
+      "本看板当前为<b>只读同步</b>：源表由各厂共享维护，看板侧不回写源表格；台账中的负责人与截止日期取自源表原值，缺失时标注「待确认」。";
+  } catch (e) {
+    showBanner("加载失败：" + (e && e.message ? e.message : String(e)), "err");
+  }
+  if (btn) btn.textContent = "刷新";
+}
+
+async function boot() {
+  if (!window.WorkBuddyCloud) { showBanner("云服务 SDK 加载失败，请检查网络后刷新。", "err"); return; }
+  cloud = WorkBuddyCloud.createWorkBuddyCloud(PUBLIC_CONFIG);
+  renderTabs();
+  switchTab("all");
+  await restoreAuth();
+  await loadAll();
+  setInterval(loadAll, REFRESH_MS);
+}
+boot();
+</script>
+</body>
+</html>
