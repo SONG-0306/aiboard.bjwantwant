@@ -1,0 +1,14 @@
+name = "aiboard-worker"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# KV 持久化：先建命名空间再填 id
+#   wrangler kv namespace create aiboard-kv
+# 把输出里的 id 粘到下面
+[[kv_namespaces]]
+binding = "AIBOARD_KV"
+id = "REPLACE_WITH_YOUR_KV_ID"
+
+# 推送密码（建议改用 wrangler secret put PASSWORD 设为密钥，而非明文写这里）
+[vars]
+PASSWORD = "sy516149756"
