@@ -33,6 +33,8 @@ GET  https://qa-want.pages.dev/api/data     （前端自动调用）
    qa-want → 设置 → 变量和密钥 → 添加
    名称 `PASSWORD`，值 `sy516149756`，类型选「密钥」（加密）
 
+   注：接口也兼容中文名「秘钥」「密钥」，但建议统一用 `PASSWORD`。
+
 4. 重新部署
    push 到 main 会自动部署。也可在「部署」页手动重试。
 
