@@ -44,13 +44,21 @@ export async function onRequestPost(context) {
     return json({ error: "INVALID_BODY" }, 400);
   }
 
-  const updatedAt = new Date().toISOString();
+  // 兼容两种载荷：{雪饼:...} 直接推，或 {"data":{雪饼:...}} 带外层包装
+  const payload =
+    body.data && typeof body.data === "object" ? body.data : body;
+
+  if (!payload || typeof payload !== "object" || Object.keys(payload).length === 0) {
+    return json({ error: "EMPTY_BODY" }, 400);
+  }
+
+  const updatedAt = body.updated_at || new Date().toISOString();
   await env.AIBOARD_KV.put(
     "aiboard_data",
-    JSON.stringify({ data: body, updated_at: updatedAt })
+    JSON.stringify({ data: payload, updated_at: updatedAt })
   );
 
-  return json({ ok: true, updated_at: updatedAt, bytes: JSON.stringify(body).length });
+  return json({ ok: true, updated_at: updatedAt, keys: Object.keys(payload), bytes: JSON.stringify(payload).length });
 }
 
 function json(obj, status = 200) {
