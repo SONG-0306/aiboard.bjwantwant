@@ -18,12 +18,18 @@ export async function onRequestPost(context) {
   if (!env.AIBOARD_KV) {
     return json({ error: "KV_NOT_BOUND" }, 500);
   }
-  if (!env.PASSWORD) {
-    return json({ error: "PASSWORD_NOT_SET", hint: "Pages 设置里未配置 PASSWORD 变量" }, 500);
+
+  // 兼容面板上中文变量名「秘钥 / 密钥」与标准名 PASSWORD
+  const pw = env.PASSWORD || env["秘钥"] || env["密钥"];
+  if (!pw) {
+    return json(
+      { error: "PASSWORD_NOT_SET", hint: "Pages 变量里需要 PASSWORD，或命名为「秘钥」" },
+      500
+    );
   }
 
   const auth = request.headers.get("Authorization") || "";
-  if (auth !== `Bearer ${env.PASSWORD}`) {
+  if (auth !== `Bearer ${pw}`) {
     return json({ error: "UNAUTHORIZED" }, 401);
   }
 
